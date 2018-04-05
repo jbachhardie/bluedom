@@ -6,17 +6,17 @@ import * as VNode$Bluedom from "../src/VNode.bs.js";
 var match = document.getElementById("root");
 
 if (!(match == null)) {
-  VNode$Bluedom.reify(/* DomNode */[
-        "div",
-        /* :: */[
-          /* Id */Block.__(0, ["demo"]),
-          /* :: */[
-            /* TextContent */Block.__(1, ["Hello, World!"]),
-            /* [] */0
-          ]
-        ],
-        /* [] */0
-      ], match);
+  VNode$Bluedom.mount(match, VNode$Bluedom.reify(/* Component */Block.__(2, [/* HTML */Block.__(0, [
+                  "div",
+                  /* :: */[
+                    /* Id */["demo"],
+                    /* [] */0
+                  ],
+                  /* :: */[
+                    /* Text */Block.__(1, ["Hello, World!"]),
+                    /* [] */0
+                  ]
+                ])])));
 }
 
 export {

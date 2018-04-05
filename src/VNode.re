@@ -1,31 +1,41 @@
 open Webapi;
 
 type property =
-  | Id(string)
-  | TextContent(string);
+  | Id(string);
 
 type vNode =
-  | DomNode(string, list(property), list(vNode))
-  | Component;
+  | HTML(string, list(property), list(vNode))
+  | Text(string)
+  | Component(vNode);
 
-let applyProp = (elm: Dom.Element.t, property: property) =>
+let applyProp = (element, property) =>
   switch property {
-  | Id(id) => Dom.Element.setId(elm, id)
-  | TextContent(text) => Dom.Element.setTextContent(elm, text)
+  | Id(id) => Dom.Element.setId(element, id)
   };
 
-let reify = (vNode: vNode, domNode: Dom.Element.t) =>
-  switch vNode {
-  | Component => ()
-  | DomNode(tag, props, children) =>
-    let elm = Dom.Document.createElement(tag, Dom.document);
-    Belt.List.forEach(props, applyProp(elm));
-    let parent = Dom.Element.parentNode(domNode);
-    switch parent {
-    | None => failwith("NoParent") |> ignore
-    | Some(parent) =>
-      Dom.Node.insertBefore(elm, domNode, parent) |> ignore;
-      Dom.Node.removeChild(domNode, parent) |> ignore;
-    };
-    ();
+let rec reify = (vNode) =>
+switch vNode {
+| Component(innerVNode) => reify(innerVNode)
+| HTML(tag, props, children) =>
+let element = Dom.Document.createElement(tag, Dom.document);
+    Belt.List.forEach(props, applyProp(element));
+    Belt.List.forEach(children, (child) => switch child {
+      | Text(content) => Dom.Document.createTextNode(content, Dom.document) |> Dom.Element.appendChild(_, element)
+      | _ => reify(child) |> Dom.Element.appendChild(_, element)
+      });
+    element;
+  | Text(content) =>
+    let element = reify(HTML("div", [], []));
+    Dom.Element.setTextContent(element, content);
+    element;
   };
+
+let mount = (node, target) => {
+  let parent = Dom.Element.parentElement(target);
+  switch parent {
+  | None => failwith("NoParent") |> ignore
+  | Some(parent) =>
+    Dom.Element.appendChild(node, parent) |> ignore;
+    Dom.Element.removeChild(target, parent) |> ignore;
+  };
+};
